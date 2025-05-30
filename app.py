@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client
 from io import StringIO
 import urllib.parse
+import time
 
 import os
 import streamlit as st
@@ -100,6 +101,7 @@ if uploaded_file:
                 if not link:
                     link = search_discogs(title, artist)
                     source = "Discogs"
+                    time.sleep(1.1)  # Throttle to avoid Discogs rate limit
 
                 df.at[i, 'link'] = link if link else ""
                 df.at[i, 'source'] = source if link else "Not Found"
