@@ -1,0 +1,6 @@
+streamlit
+spotipy
+discogs-client
+pandas
+requests
+a lot of patience bc this is my first app :o
