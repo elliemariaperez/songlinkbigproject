@@ -66,7 +66,7 @@ def search_discogs(title, artist):
 
 st.title("🎵 ellie's song link finder!!!")
 
-uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is phase 1 :D", type="csv")
+uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is just phase 1 and I'm not a developer :D", type="csv")
 
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
