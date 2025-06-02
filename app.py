@@ -7,10 +7,9 @@ import discogs_client
 from io import StringIO
 import urllib.parse
 import time
-
 import os
-import streamlit as st
 
+# === Load environment variables ===
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 DISCOGS_USER_TOKEN = os.getenv("DISCOGS_USER_TOKEN")
@@ -19,16 +18,21 @@ if not all([SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, DISCOGS_USER_TOKEN]):
     st.error("girl you lost your keys! Please set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and DISCOGS_USER_TOKEN environment variables.")
     st.stop()
 
+# === Cached API clients ===
+@st.cache_resource
+def get_spotify_client():
+    return spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET))
 
-# === Initialize APIs ===
-spotify = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
-    client_id=SPOTIFY_CLIENT_ID,
-    client_secret=SPOTIFY_CLIENT_SECRET))
+@st.cache_resource
+def get_discogs_client():
+    return discogs_client.Client('song-link-finder/1.0', user_token=DISCOGS_USER_TOKEN)
 
-discogs = discogs_client.Client('song-link-finder/1.0', user_token=DISCOGS_USER_TOKEN)
+spotify = get_spotify_client()
+discogs = get_discogs_client()
 
 # === Search functions ===
-
 def search_spotify(title, artist):
     query = f'track:{title} artist:{artist}'
     try:
@@ -64,8 +68,7 @@ def search_discogs(title, artist):
     return None
 
 # === Main Streamlit app ===
-
-st.title("🎵 ellie's song link finder!!!")
+st.title("\ud83c\udfb5 ellie's song link finder!!!")
 
 uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is just phase 1 and I'm not a developer :D also you should probably include a column for unique ID but not required", type="csv")
 
