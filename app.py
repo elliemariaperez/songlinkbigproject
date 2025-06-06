@@ -135,6 +135,3 @@ if uploaded_file:
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
         st.download_button(label="Download CSV with links", data=csv_buffer.getvalue(), file_name="songs_with_links.csv", mime="text/csv")
-        csv_buffer = StringIO()
-        df.to_csv(csv_buffer, index=False)
-        st.download_button(label="Download CSV with links", data=csv_buffer.getvalue(), file_name="songs_with_links.csv", mime="text/csv")
