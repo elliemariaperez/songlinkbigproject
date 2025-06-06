@@ -1,24 +1,24 @@
-import streamlit as st 
+import streamlit as st
 import pandas as pd
 import requests
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client
+import lyricsgenius
 from io import StringIO
 import urllib.parse
 import time
 import os
 from Levenshtein import ratio  # For fuzzy matching
-import lyricsgenius
 
-# === Load environment variables ===
-SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
-SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
-DISCOGS_USER_TOKEN = os.getenv("DISCOGS_USER_TOKEN")
-GENIUS_ACCESS_TOKEN = st.secrets.get("GENIUS_ACCESS_TOKEN") or st.text_input("Paste your Genius Access Token", type="password")
+# === Credentials from Streamlit input ===
+SPOTIFY_CLIENT_ID = st.secrets.get("SPOTIFY_CLIENT_ID") or os.getenv("SPOTIFY_CLIENT_ID")
+SPOTIFY_CLIENT_SECRET = st.secrets.get("SPOTIFY_CLIENT_SECRET") or os.getenv("SPOTIFY_CLIENT_SECRET")
+DISCOGS_USER_TOKEN = st.secrets.get("DISCOGS_USER_TOKEN") or os.getenv("DISCOGS_USER_TOKEN")
+GENIUS_ACCESS_TOKEN = st.text_input("Paste your Genius Access Token:", type="password")
 
 if not all([SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, DISCOGS_USER_TOKEN, GENIUS_ACCESS_TOKEN]):
-    st.error("girl you lost your keys! Please set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, DISCOGS_USER_TOKEN, and GENIUS_ACCESS_TOKEN.")
+    st.error("girl you lost your keys! Make sure all 4 tokens are provided: Spotify, Discogs, and Genius.")
     st.stop()
 
 # === Cached API clients ===
@@ -34,7 +34,11 @@ def get_discogs_client():
 
 @st.cache_resource
 def get_genius_client():
-    return lyricsgenius.Genius(GENIUS_ACCESS_TOKEN, timeout=10, retries=3, verbose=False)
+    genius = lyricsgenius.Genius(GENIUS_ACCESS_TOKEN, timeout=10, retries=3, verbose=False)
+    genius.headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36"
+    }
+    return genius
 
 spotify = get_spotify_client()
 discogs = get_discogs_client()
@@ -79,7 +83,7 @@ def search_discogs(title, artist):
             title_score = ratio(title.lower(), result_title.lower())
             avg_score = (artist_score + title_score) / 2
 
-            if avg_score > best_score and avg_score > 0.7:  # threshold
+            if avg_score > best_score and avg_score > 0.7:
                 best_score = avg_score
                 best_match = r
 
@@ -92,7 +96,7 @@ def search_discogs(title, artist):
 
 def search_genius(title, artist):
     try:
-        song = genius.search_song(title=title, artist=artist)
+        song = genius.search_song(title, artist)
         if song:
             return song.url
     except Exception as e:
