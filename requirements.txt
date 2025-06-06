@@ -1,5 +1,6 @@
 streamlit
-spotipy
-discogs-client
 pandas
 requests
+spotipy
+discogs-client
+python-Levenshtein
