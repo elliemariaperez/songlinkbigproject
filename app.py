@@ -96,12 +96,25 @@ def search_discogs(title, artist):
     return None
 
 def search_genius(title, artist):
+    if not GENIUS_ACCESS_TOKEN:
+        st.warning("Missing Genius access token.")
+        return None
+
+    query = f"{title} {artist}"
+    headers = {"Authorization": f"Bearer {GENIUS_ACCESS_TOKEN}"}
+    url = f"https://api.genius.com/search?q={urllib.parse.quote(query)}"
+
     try:
-        song = genius.search_song(title, artist)
-        if song:
-            return song.url
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        hits = response.json().get("response", {}).get("hits", [])
+
+        if hits:
+            # Grab the first result URL
+            return hits[0]['result']['url']
     except Exception as e:
         st.warning(f"Genius API error: {e}")
+
     return None
 
 # === Streamlit App ===
