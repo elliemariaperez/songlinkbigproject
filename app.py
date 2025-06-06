@@ -70,6 +70,7 @@ def search_itunes(title, artist):
     return None
 
 def search_discogs(title, artist):
+    time.sleep(1.1)  # Always wait before making the request
     try:
         query = f"{title} {artist}"
         results = discogs.search(query, type='release')
