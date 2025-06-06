@@ -15,7 +15,8 @@ from Levenshtein import ratio  # For fuzzy matching
 SPOTIFY_CLIENT_ID = st.secrets.get("SPOTIFY_CLIENT_ID") or os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = st.secrets.get("SPOTIFY_CLIENT_SECRET") or os.getenv("SPOTIFY_CLIENT_SECRET")
 DISCOGS_USER_TOKEN = st.secrets.get("DISCOGS_USER_TOKEN") or os.getenv("DISCOGS_USER_TOKEN")
-GENIUS_ACCESS_TOKEN = st.text_input("Paste your Genius Access Token:", type="password")
+GENIUS_ACCESS_TOKEN = st.secrets.get("GENIUS_ACCESS_TOKEN") or os.getenv("GENIUS_ACCESS_TOKEN")
+
 
 if not all([SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, DISCOGS_USER_TOKEN, GENIUS_ACCESS_TOKEN]):
     st.error("girl you lost your keys! Make sure all 4 tokens are provided: Spotify, Discogs, and Genius.")
