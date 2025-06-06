@@ -63,8 +63,8 @@ def search_discogs(title, artist):
         for r in results.page(1):
             result_title = r.title.lower()
             result_artists = ", ".join([a.name for a in getattr(r, 'artists', [])]).lower()
-            
-            if title.lower() in result_title and artist.lower() in result_artists:
+
+            if title.lower() in result_title and all(part in result_artists for part in artist.lower().split()):
                 return r.data.get('uri')
     except Exception as e:
         st.warning(f"Discogs API error: {e}")
