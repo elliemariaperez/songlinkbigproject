@@ -58,10 +58,13 @@ def search_itunes(title, artist):
 
 def search_discogs(title, artist):
     try:
-        results = discogs.search(f"{title} {artist}", type='release')
+        query = f"{title} {artist}"
+        results = discogs.search(query, type='release')
         for r in results.page(1):
-            if artist.lower() in r.data.get('artists', [{}])[0].get('name', '').lower() \
-            and title.lower() in r.title.lower():
+            result_title = r.title.lower()
+            result_artists = ", ".join([a.name for a in getattr(r, 'artists', [])]).lower()
+            
+            if title.lower() in result_title and artist.lower() in result_artists:
                 return r.data.get('uri')
     except Exception as e:
         st.warning(f"Discogs API error: {e}")
