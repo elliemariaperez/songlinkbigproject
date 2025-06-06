@@ -32,7 +32,7 @@ def get_discogs_client():
 spotify = get_spotify_client()
 discogs = get_discogs_client()
 
-# === Search functions ===
+# search functions in spotify, itunes and discogs
 def search_spotify(title, artist):
     query = f'track:{title} artist:{artist}'
     try:
@@ -67,8 +67,8 @@ def search_discogs(title, artist):
         st.warning(f"Discogs API error: {e}")
     return None
 
-# === Main Streamlit app ===
-st.title("\ud83c\udfb5 ellie's song link finder!!!")
+# creating streamlit app
+st.title("🎵 ellie's song link finder!!!")
 
 uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is just phase 1 and I'm not a developer :D also you should probably include a column for unique ID but not required", type="csv")
 
