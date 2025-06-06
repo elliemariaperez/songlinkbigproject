@@ -8,6 +8,7 @@ from io import StringIO
 import urllib.parse
 import time
 import os
+from Levenshtein import ratio  # NEW: For fuzzy matching
 
 # === Load environment variables ===
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
@@ -32,7 +33,7 @@ def get_discogs_client():
 spotify = get_spotify_client()
 discogs = get_discogs_client()
 
-# search functions in spotify, itunes and discogs
+# === Search functions ===
 def search_spotify(title, artist):
     query = f'track:{title} artist:{artist}'
     try:
@@ -60,17 +61,29 @@ def search_discogs(title, artist):
     try:
         query = f"{title} {artist}"
         results = discogs.search(query, type='release')
-        for r in results.page(1):
-            result_title = r.title.lower()
-            result_artists = ", ".join([a.name for a in getattr(r, 'artists', [])]).lower()
+        best_match = None
+        best_score = 0
 
-            if title.lower() in result_title and all(part in result_artists for part in artist.lower().split()):
-                return r.data.get('uri')
+        for r in results.page(1):
+            result_title = r.title or ''
+            result_artists = ", ".join([a.name for a in getattr(r, 'artists', [])])
+
+            artist_score = ratio(artist.lower(), result_artists.lower())
+            title_score = ratio(title.lower(), result_title.lower())
+            avg_score = (artist_score + title_score) / 2
+
+            if avg_score > best_score and avg_score > 0.7:  # threshold
+                best_score = avg_score
+                best_match = r
+
+        if best_match:
+            return best_match.data.get('uri')
+
     except Exception as e:
         st.warning(f"Discogs API error: {e}")
     return None
 
-# creating streamlit app
+# === Streamlit App ===
 st.title("🎵 ellie's song link finder!!!")
 
 uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is just phase 1 and I'm not a developer :D also you should probably include a column for unique ID but not required", type="csv")
@@ -107,7 +120,7 @@ if uploaded_file:
                 if not link:
                     link = search_discogs(title, artist)
                     source = "Discogs"
-                    time.sleep(1.1)  # Throttle to avoid Discogs rate limit
+                    time.sleep(1.1)
 
                 df.at[i, 'link'] = link if link else ""
                 df.at[i, 'source'] = source if link else "Not Found"
@@ -119,6 +132,9 @@ if uploaded_file:
         st.write("### Results Preview")
         st.dataframe(df.head(20))
 
+        csv_buffer = StringIO()
+        df.to_csv(csv_buffer, index=False)
+        st.download_button(label="Download CSV with links", data=csv_buffer.getvalue(), file_name="songs_with_links.csv", mime="text/csv")
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
         st.download_button(label="Download CSV with links", data=csv_buffer.getvalue(), file_name="songs_with_links.csv", mime="text/csv")
