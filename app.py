@@ -56,7 +56,18 @@ st.title("🎵 ellie's song link finder!!!")
 uploaded_file = st.file_uploader("upload a CSV file with 'title' and 'artist' columns, soooo sorry if it doesn't work, this is just phase 1 and I'm not a developer :D also you should probably include a column for unique ID but not required", type="csv")
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    try:
+        # Try reading as UTF-8
+        df = pd.read_csv(uploaded_file)
+    except UnicodeDecodeError:
+        # Retry with fallback encoding
+        uploaded_file.seek(0)  # Reset file pointer
+        try:
+            df = pd.read_csv(uploaded_file, encoding='latin1')
+            st.info("FYI: Your file wasn’t UTF-8, so we read it using Latin-1 encoding instead.")
+        except Exception as e:
+            st.error(f"Could not read the file due to encoding issues: {e}")
+            st.stop()
     if 'title' not in df.columns or 'artist' not in df.columns:
         st.error("CSV must contain 'title' and 'artist' columns")
     else:
