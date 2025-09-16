@@ -1,4 +1,4 @@
-import streamlit as st
+import streamlit as st 
 import pandas as pd
 import requests
 import spotipy
@@ -42,12 +42,25 @@ def search_itunes(title, artist):
     term = urllib.parse.quote(f"{title} {artist}")
     url = f"https://itunes.apple.com/search?term={term}&limit=1&entity=song"
     try:
-        r = requests.get(url)
+        r = requests.get(url, timeout=5)
+        
+        if r.status_code != 200:
+            st.warning(f"iTunes API returned status code {r.status_code} for '{title} - {artist}'")
+            return None
+        
+        if not r.text.strip():
+            st.warning(f"iTunes API returned an empty response for '{title} - {artist}'")
+            return None
+
         data = r.json()
-        if data['resultCount'] > 0:
+        if data.get('resultCount', 0) > 0:
             return data['results'][0].get('trackViewUrl')
-    except Exception as e:
-        st.warning(f"iTunes API error: {e}")
+        else:
+            st.info(f"No iTunes result found for '{title} - {artist}'")
+    except requests.exceptions.RequestException as e:
+        st.warning(f"iTunes API request error: {e}")
+    except ValueError as e:
+        st.warning(f"iTunes API returned invalid JSON for '{title} - {artist}': {e}")
     return None
 
 # === Streamlit App ===
@@ -68,6 +81,7 @@ if uploaded_file:
         except Exception as e:
             st.error(f"Could not read the file due to encoding issues: {e}")
             st.stop()
+
     if 'title' not in df.columns or 'artist' not in df.columns:
         st.error("CSV must contain 'title' and 'artist' columns")
     else:
@@ -100,6 +114,8 @@ if uploaded_file:
 
                 my_bar.progress((i+1)/total)
 
+                time.sleep(0.2)  # Be nice to the APIs
+
             st.success("all set diva!")
 
         st.write("### Results Preview")
@@ -108,4 +124,5 @@ if uploaded_file:
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False)
         st.download_button(label="Download CSV with links", data=csv_buffer.getvalue(), file_name="songs_with_links.csv", mime="text/csv")
+
 
